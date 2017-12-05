@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>拖拽本地图片到页面指定元素内</title>
+
+		<style>
+			*,
+			 :after,
+			 :before {
+				-webkit-box-sizing: border-box;
+				-moz-box-sizing: border-box;
+				box-sizing: border-box;
+			}
+			
+			::-webkit-scrollbar {
+				width: 15px;
+				height: 15px;
+				background-color: transparent;
+				border-radius: 9px;
+			}
+			
+			::-webkit-scrollbar:hover {
+				background-color: #fafafa;
+			}
+			
+			::-webkit-scrollbar-track:hover {
+				background: #f6f6f6;
+			}
+			
+			::-webkit-scrollbar-thumb {
+				background: #e0e0e0;
+				border-radius: 9px;
+				background-clip: content-box;
+				border: 5px solid transparent;
+			}
+			
+			::-webkit-scrollbar-thumb:hover {
+				background: #c2c2c2;
+				background-clip: content-box;
+			}
+			
+			::-webkit-scrollbar-thumb:vertical:active {
+				background-color: #9da1a5;
+				border: 5px solid transparent;
+			}
+			
+			#dropBox {
+				width: 50%;
+				height: 600px;
+				border: 1px solid #015EAC;
+				color: #666;
+				overflow: hidden;
+				clear: left;
+				font-size: 16px;
+				position: relative;
+				overflow-y: auto;
+			}
+			
+			#dropBox .tips {
+				position: absolute;
+				left: 50%;
+				top: 50%;
+				-webkit-transform: translate(-50%, -50%);
+				transform: translate(-50%, -50%);
+			}
+			
+			#code_div {
+				width: 50%;
+				height: 600px;
+				border: 1px solid #015EAC;
+				font-size: 18px;
+			}
+			
+			.imgList li {
+				width: 100%;
+			}
+			
+			.imgList li.active {
+				background: #ccc;
+			}
+			
+			.imgList li img {
+				width: 100%;
+			}
+		</style>
+		<link rel="stylesheet" href="css/fix.css" />
+		<script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
+
+	</head>
+
+	<body>
+
+		<div class="imgInfo" id="imgInfo">图片信息：</div>
+		<div class="clearfix">
+			<div id="dropBox" class="left">
+				<div class="tips">拖拽图片到这里！</div>
+				<ul class="imgList" id="imgList">
+					<!--//图片放置位置-->
+				</ul>
+			</div>
+			<textarea class="left" id="code_div">代码区</textarea>
+		</div>
+		<script type="text/javascript">
+			//字符串逆转
+			function strturn(str) {
+				if(str != "") {
+					var str1 = "";
+					for(var i = str.length - 1; i >= 0; i--) {
+						str1 += str.charAt(i);
+					}
+					return(str1);
+				}
+			}
+			//取文件后缀名
+			function GetFileExt(filepath) {
+				if(filepath != "") {
+					var pos = "." + filepath.replace(/.+\./, "");
+					return pos;
+				}
+			}
+			//取文件名不带后缀
+			function GetFileNameNoExt(filepath) {
+				var pos = strturn(GetFileExt(filepath));
+				var file = strturn(filepath);
+				var pos1 = strturn(file.replace(pos, ""));
+				var pos2 = GetFileName(pos1);
+				return pos2;
+			}
+			//取文件全名名称
+			function GetFileName(filepath) {
+				if(filepath != "") {
+					var names = filepath.split("\\");
+					return names[names.length - 1];
+				}
+			}
+			var list = [];
+			$(function() {
+
+				$("#imgList").on("click", "li", function() {
+					$(this).addClass("active").siblings().removeClass("active");
+
+					var id = $(this).attr("data-id");
+					$.each(list, function(i, obj) {
+						if(obj.name == id) {
+							$("#imgInfo").text("文件名：" + obj.name + ", width: " + obj.width + ",  height: " + obj.height);
+						}
+					})
+
+				});
+
+			});
+
+			window.onload = function() {
+				var oDropBox = document.getElementById('dropBox'),
+					ocode_div = document.getElementById('code_div');
+
+				oDropBox.addEventListener('dragover', function(e) {
+					e.stopPropagation();
+					e.preventDefault();
+				}, false);
+				oDropBox.addEventListener('drop', handleDrop, false);
+
+				function handleDrop(e) {
+					e.stopPropagation();　　
+					e.preventDefault();
+
+					$("#imgList").empty();
+					$("#code_div").text("");
+					list = [];
+					//
+
+					var fileList = e.dataTransfer.files;　　 //获取拖拽文件
+					var fileType = fileList[0].type;　　　　
+
+					var len = fileList.length;
+					var count = 0;
+					$.each(fileList, function(i, item) {
+
+						(function(file) {
+							var fileName = GetFileNameNoExt(file.name);
+							var img = document.createElement('img');　　　　
+							var reader = new FileReader();
+
+							reader.onload = function(e) {
+								img.src = this.result;
+								//								oDropBox.innerHTML = '';
+								$("#imgList").append('<li data-id="' + fileName + '">' + img.outerHTML + "</li>");
+
+								//ocode_div.innerHTML = this.result;
+
+								img.onload = function() {
+									img.onload = null;
+									var imgWidth = img.width;
+									var imgHeight = img.height;
+
+									list.push({
+										name: fileName,
+										width: imgWidth,
+										height: imgHeight,
+										div: '<div class="' + fileName + '"></div>'
+									});
+									count++;
+
+									if(count >= len) {
+										onComplete(list);
+									}
+								}
+							}
+							reader.readAsDataURL(file);
+						})(item);
+					})
+
+					if(fileType.indexOf('image') == -1) {
+						alert('请拖拽图片~');
+						return;
+					}
+
+				}　
+
+				function onComplete(list) {
+					list.sort(function(a, b) {
+						return a.name > b.name;
+					});
+
+					console.log(list);
+
+					var divStr = "";
+					$.each(list, function(i, obj) {
+
+						divStr += obj.div + "\r\n";
+						$("#code_div").text(divStr);
+
+					})
+
+				}　
+			}
+		</script>
+
+	</body>
+
+</html>
