@@ -48,7 +48,7 @@
 			
 			#dropBox {
 				width: 50%;
-				height: 600px;
+				height: 450px;
 				border: 1px solid #015EAC;
 				color: #666;
 				overflow: hidden;
@@ -68,7 +68,7 @@
 			
 			#code_div {
 				width: 50%;
-				height: 600px;
+				height: 450px;
 				border: 1px solid #015EAC;
 				font-size: 18px;
 			}
@@ -83,6 +83,13 @@
 			
 			.imgList li img {
 				width: 100%;
+			}
+			
+			#loadingList {
+				width: 100%;
+				height: 300px;
+				border: 1px solid #015EAC;
+				font-size: 18px;
 			}
 		</style>
 		<link rel="stylesheet" href="css/fix.css" />
@@ -100,8 +107,14 @@
 					<!--//图片放置位置-->
 				</ul>
 			</div>
-			<textarea class="left" id="code_div">代码区</textarea>
+			<textarea class="left" id="code_div" placeholder="代码区"></textarea>
 		</div>
+		<div class="mrg5T mrg5B">
+			<span>预加载list区(可累积，点击清空才会清空)</span>
+			<button id="clearBtn">清空</button>
+		</div>
+		<textarea class="left" id="loadingList" placeholder="预加载list区"></textarea>
+
 		<script type="text/javascript">
 			//字符串逆转
 			function strturn(str) {
@@ -197,6 +210,7 @@
 
 									list.push({
 										name: fileName,
+										fullName: file.name,
 										width: imgWidth,
 										height: imgHeight,
 										div: '<div class="' + fileName + '"></div>'
@@ -227,14 +241,21 @@
 					console.log(list);
 
 					var divStr = "";
+					var loadStr = "";
 					$.each(list, function(i, obj) {
 
 						divStr += obj.div + "\r\n";
-						$("#code_div").text(divStr);
+						loadStr += obj.fullName + ", ";
 
 					})
+					$("#code_div").text(divStr);
+					$("#loadingList").append(loadStr);
 
 				}　
+				
+				$("#clearBtn").click(function(){
+						$("#loadingList").text("");
+				});
 			}
 		</script>
 
